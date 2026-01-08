@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Login</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        button {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: left;
+            word-break: break-all;
+            display: none; /* Ẩn đi khi chưa có kết quả */
+            background: #f8f9fa;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .label {
+            font-weight: bold;
+            color: #d93025;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Demo Google Login (Web)</h2>
+        <p>Bấm nút dưới để test lấy Access Token</p>
+        
+        <button onclick="signIn()">Đăng nhập bằng Google</button>
+
+        <div id="result">
+            <p><span class="label">Status:</span> <span id="status">Đang chờ...</span></p>
+            <p><span class="label">Hello:</span> <span id="username">...</span></p>
+            <p><span class="label">Email:</span> <span id="email">...</span></p>
+            <hr>
+            <p><span class="label">YOUR ACCESS TOKEN:</span></p>
+            <textarea id="accessToken" rows="5" style="width: 100%;"></textarea>
+            <p style="font-size: 12px; color: gray;">(Copy token này ném vào Postman gọi thử API Django của bạn xem chạy không nhé!)</p>
+        </div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        // 1. CẤU HÌNH CLIENT ID CỦA BẠN Ở ĐÂY
+        const CLIENT_ID = "48475528916-v4j2qg40mtqlt256iige8pj4nrk0nr9h.apps.googleusercontent.com";
+
+        let tokenClient;
+
+        // Hàm này chạy ngay khi thư viện Google tải xong
+        window.onload = function() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'email profile',
+                callback: (response) => {
+                    // Xử lý khi Google trả về kết quả
+                    if (response.access_token) {
+                        displayResult(response);
+                    } else {
+                        alert("Lỗi: Không lấy được Token!");
+                    }
+                },
+            });
+        };
+
+        // Hàm được gọi khi bấm nút
+        function signIn() {
+            if (tokenClient) {
+                // Mở Popup Google yêu cầu Access Token
+                tokenClient.requestAccessToken();
+            } else {
+                alert("Thư viện Google chưa tải xong, đợi xíu...");
+            }
+        }
+
+        // Hàm hiển thị kết quả ra màn hình
+        function displayResult(response) {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('status').innerText = "Thành công! ✅";
+            document.getElementById('accessToken').value = response.access_token;
+
+            // Gọi thử API của Google để lấy tên user (Test chơi thôi)
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: {
+                    'Authorization': `Bearer ${response.access_token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('username').innerText = data.name;
+                document.getElementById('email').innerText = data.email;
+            });
+        }
+    </script>
+</body>
+</html>

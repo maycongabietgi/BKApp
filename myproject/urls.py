@@ -19,23 +19,25 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from users.views import GoogleLogin, MeView
+from users.views import GoogleLogin, MeView, UserDetailView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView  
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/social/login/', GoogleLogin.as_view(), name='google_login'),
     path('api/me/', MeView.as_view(), name='me'),
-    path('api/', include('store.urls')),
+    path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user-detail'),
+    path('', include('store.urls')),
+    path('', include('orders.urls')),
+    path('', include('reviews.urls')),
+    path('', include('messaging.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
 
-    # Endpoint giao diện Swagger UI (Giao diện phổ biến nhất)
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-
-    # Endpoint giao diện Redoc (Giao diện thay thế, gọn gàng hơn)
+    path('accounts/', include('allauth.urls')),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    
+
 
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-# Google Sign-In SDK dành cho React Native để xử lý đăng nhập, bên dưới là client_id
-# 48475528916-v4j2qg40mtqlt256iige8pj4nrk0nr9h.apps.googleusercontent.com
